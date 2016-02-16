@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<Entries>                 
+        <Entry AccounType="1" Account="Psaadm" Path="%ProgramData%" SubPath="SpamExperts" AceFlags="SubfoldersAndFilesOnly" AccessMask="ReadWrite" EntryFlags="0"/>
+        <Entry AccounType="1" Account="Psacln" Path="%ProgramData%" SubPath="SpamExperts" AceFlags="SubfoldersAndFilesOnly" AccessMask="ReadWrite" EntryFlags="0"/>
+        <Entry AccounType="1" Account="Users" Path="%ProgramData%" SubPath="SpamExperts" AceFlags="SubfoldersAndFilesOnly" AccessMask="ReadWrite" EntryFlags="0"/>
+
+        <Entry AccounType="1" Account="Psaadm" Path="%ProgramFiles%" SubPath="SpamExperts" AceFlags="SubfoldersAndFilesOnly" AccessMask="FullAccess" EntryFlags="0"/>
+    	<Entry AccounType="1" Account="Psacln" Path="%ProgramFiles%" SubPath="SpamExperts" AceFlags="SubfoldersAndFilesOnly" AccessMask="ReadAndExecute" EntryFlags="0x21"/>
+        <Entry AccounType="1" Account="Psaserv" Path="%ProgramFiles%" SubPath="SpamExperts" AceFlags="SubfoldersAndFilesOnly" AccessMask="ReadAndExecute" EntryFlags="0x21"/>
+        <Entry AccounType="1" Account="Users" Path="%ProgramFiles%" SubPath="SpamExperts" AceFlags="SubfoldersAndFilesOnly" AccessMask="ReadAndExecute" EntryFlags="0x20"/>
+</Entries>

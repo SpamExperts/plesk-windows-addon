@@ -78,7 +78,7 @@ exit /b
         sBaseUrl = "http://download.seinternal.com/integration/files/plesk"
 
         if NOT oArgs.count = 0 Then
-            if oArgs(0) = "trunk" Then
+            if oArgs(0) = "trunk" Or oArgs(0) = "master" Then
                 sCHECKURL = "http://download.seinternal.com/integration/?act=getversion&panel=plesk&tier=testing&pkgtype=zip"
                 sfilepart = "_testing.zip"
             else

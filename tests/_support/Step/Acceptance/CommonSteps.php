@@ -2,6 +2,7 @@
 
 namespace Step\Acceptance;
 
+use Pages\PleskWindowsClientPage;
 use Pages\SpampanelPage;
 use Pages\ProfessionalSpamFilterPage;
 
@@ -174,7 +175,7 @@ class CommonSteps extends \WebGuy
 
     }
 
-    public function createCustomer()
+    public function createCustomer($subscriptionPlan = null)
     {
         $this->customerUsername = uniqid("customer");
         $this->customerPassword = uniqid("xX");
@@ -195,13 +196,32 @@ class CommonSteps extends \WebGuy
         $I->fillField("//input[@id='subscription-domainInfo-userName']", $this->customerUsername);
         $I->fillField("//input[@id='subscription-domainInfo-password']", $this->customerPassword);
         $I->fillField("//input[@id='subscription-domainInfo-passwordConfirmation']", $this->customerPassword);
-//        $I->selectOption("//select[@id='subscription-subscriptionInfo-servicePlan']", "Unlimited");
+        $I->selectOption("//select[@id='subscription-subscriptionInfo-servicePlan']", $subscriptionPlan);
 
         $I->click("//button[@name='send']");
         $I->waitForElement("//div[@class='msg-content']", 200);
         $I->see("Customer {$this->customerUsername} was created.", "//div[@class='msg-box msg-info']");
         return [$this->customerUsername, $this->customerPassword, $this->domain];
     }
+
+
+    public function changeCustomerPlan($customerUsername)
+    {
+        $I = $this;
+        $I->amGoingTo("\n\n --- Change the subscription plan for '$this->customerUsername' --- \n");
+        $I->switchToLeftFrame();
+        $I->click("//a[contains(.,'Customers')]");
+        $I->switchToWorkFrame();
+        $I->click("//a[contains(.,'$this->customerUsername')]");
+        $I->waitForElementVisible("//a[contains(.,'Subscription')]");
+        $I->checkOption("//input[contains(@name,'listGlobalCheckbox')]");
+        $I->click("//span[contains(.,'Change Plan')]");
+        $I->waitForElementVisible("//select[contains(@name,'planSection[servicePlan]')]");
+        $I->selectOption("//select[contains(@id,'planSection-servicePlan')]", "Unlimited");
+        $I->click("//button[contains(.,'OK')]");
+        $I->waitForElementVisible("//a[contains(.,'Subscription')]");
+    }
+
 
     public function addNewSubscription(array $params = array())
     {
@@ -326,5 +346,25 @@ class CommonSteps extends \WebGuy
         $I->switchToWindow();
         $I->waitForElement('#topFrame');
         $I->switchToIFrame('topFrame');
+    }
+
+    public function removeAllDomains()
+    {
+        $I = $this;
+
+        if (!$I->getElementsCount("//td[contains(@class,'select')]")) {
+            return;
+        }
+        $I->switchToLeftFrame();
+        $I->click(PleskWindowsClientPage::CLIENT_SUBSCRIPTIONS);
+        $I->switchToWorkFrame();
+        $I->click(PleskWindowsClientPage::CLIENT_ALL_ENTRIES_BUTTON);
+        $I->waitForElementVisible(PleskWindowsClientPage::CLIENT_SELECT_ALL_SUBSCRIPTIONS);
+        $I->checkOption(PleskWindowsClientPage::CLIENT_SELECT_ALL_SUBSCRIPTIONS);
+        $I->waitForElementVisible(PleskWindowsClientPage::CLIENT_ADD_NEW_SUBSCRIPTION);
+        $I->click(PleskWindowsClientPage::CLIENT_REMOVE_SUBSCRIPTION_BUTTON);
+        $I->waitForElementVisible("//button[contains(.,'Yes')]", 30);
+        $I->click("//button[contains(.,'Yes')]");
+        $I->waitForText("Information: Selected subscriptions were removed.", 200);
     }
 }

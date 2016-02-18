@@ -214,26 +214,19 @@ class C01ConfigurationCest
 
     public function verifyUseIPAsDestinationOption(ConfigurationSteps $I)
     {
-//        $I->setConfigurationOptions(
-//            array(
-//                ConfigurationPage::AUTOMATICALLY_ADD_DOMAINS_OPT => false,
-//                ConfigurationPage::USE_IP_AS_DESTINATION_OPT => true,
-//                ConfigurationPage::FORCE_CHANGE_MX_ROUTE_OPT => true,
-//            )
-//        );
-//
-//        $account = $I->addNewSubscription();
-////        $I->toggleProtection($account['domain'], false);
-//        $I->toggleProtection($account['domain']);
-//
-//        $ip = gethostbyname($I->getEnvHostname());
-//        $routes = $I->apiGetDomainRoutes($account['domain']);
-//
-//        codecept_debug($ip);
-//        codecept_debug($routes);
-//        $I->pauseExecution();
-//
-//        $I->assertContains($ip.'::25', $routes);
+        $I->setConfigurationOptions(
+            array(
+                ConfigurationPage::AUTOMATICALLY_ADD_DOMAINS_OPT => true,
+                ConfigurationPage::USE_EXISTING_MX_OPT => false,
+                ConfigurationPage::USE_IP_AS_DESTINATION_OPT => true,
+                ConfigurationPage::FORCE_CHANGE_MX_ROUTE_OPT => true,
+            )
+        );
+
+        $account = $I->addNewSubscription();
+        $ip = gethostbyname($I->getEnvHostname());
+        $routes = $I->apiGetDomainRoutes($account['domain']);
+        $I->assertContains($ip.'::25', $routes);
     }
 
     public function verifyAddonDomains(ConfigurationSteps $I)
@@ -264,17 +257,12 @@ class C01ConfigurationCest
 
     public function verifyAddonDomainsAsAnAlias(ConfigurationSteps $I)
     {
-
-        $I->setConfigurationOptions(
-            array(
-                ConfigurationPage::PROCESS_ADDON_OPT => true,
-                ConfigurationPage::ADD_ADDON_OPT => true,
-            )
-        );
-
+        $I->setProcessAddOnAndParkedDomainsOption();
+        $I->setAddOnAsAnAliasOption();
         $I->shareIp();
-        list($customerUsername, $customerPassword, $domain) = $I->createCustomer();
-        $I->click("//tr[contains(.,'{$customerUsername}')]//a[@class='s-btn sb-login']");
+        list($customerUsername, $customerPassword, $domain) = $I->createCustomer("Unlimited");
+        $I->logout();
+        $I->login($customerUsername, $customerPassword, true);
 
         $I->click("//a[@id='buttonAddDomainAlias']");
         $I->waitForText('Add a Domain Alias');
@@ -282,15 +270,41 @@ class C01ConfigurationCest
         $I->fillField("//input[@id='name']", $aliasDomain);
         $I->click("//button[@name='send']");
         $I->waitForText("The domain alias $aliasDomain was created.", 30);
-
+        $I->logout();
+        $I->login();
         $I->goToPage(ProfessionalSpamFilterPage::DOMAIN_LIST_BTN, DomainListPage::TITLE);
         $I->searchDomainList($aliasDomain);
         $I->see($aliasDomain, DomainListPage::DOMAIN_TABLE);
         $I->see("alias", DomainListPage::DOMAIN_TABLE);
+//
+//        $I->setConfigurationOptions(
+//            array(
+//                ConfigurationPage::PROCESS_ADDON_OPT => true,
+//                ConfigurationPage::ADD_ADDON_OPT => true,
+//            )
+//        );
+//
+//        $I->shareIp();
+//        list($customerUsername, $customerPassword, $domain) = $I->createCustomer();
+//        $I->click("//tr[contains(.,'{$customerUsername}')]//a[@class='s-btn sb-login']");
+//
+//        $I->click("//a[@id='buttonAddDomainAlias']");
+//        $I->waitForText('Add a Domain Alias');
+//        $aliasDomain = 'alias' . $domain;
+//        $I->fillField("//input[@id='name']", $aliasDomain);
+//        $I->click("//button[@name='send']");
+//        $I->waitForText("The domain alias $aliasDomain was created.", 30);
+//
+//        $I->goToPage(ProfessionalSpamFilterPage::DOMAIN_LIST_BTN, DomainListPage::TITLE);
+//        $I->searchDomainList($aliasDomain);
+//        $I->see($aliasDomain, DomainListPage::DOMAIN_TABLE);
+//        $I->see("alias", DomainListPage::DOMAIN_TABLE);
     }
 
     public function verifyRedirectBackToPleskUponLogout(ConfigurationSteps $I)
     {
+        $I->goToPage(ProfessionalSpamFilterPage::CONFIGURATION_BTN, ConfigurationPage::TITLE);
+        $I->removeAllDomains();
         $I->setConfigurationOptions(
             array(
                 ConfigurationPage::REDIRECT_BACK_TO_OPT => true,

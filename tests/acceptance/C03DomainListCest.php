@@ -22,18 +22,13 @@ class C03DomainListCest
     public function verifyDomainListAsRoot(ConfigurationSteps $I)
     {
 
-        $I->goToPage(ProfessionalSpamFilterPage::CONFIGURATION_BTN, ConfigurationPage::TITLE);
+        $I->goToPage(ProfessionalSpamFilterPage::DOMAIN_LIST_BTN, DomainListPage::TITLE);
+        $I->checkListDomainsPageLayout();
+        $I->removeAllDomains();
 
-        $I->setConfigurationOptions(
-            array(
-                ConfigurationPage::AUTOMATICALLY_ADD_DOMAINS_OPT => false,
-                ConfigurationPage::AUTOMATICALLY_DELETE_DOMAINS_OPT => true,
-            )
-        );
         $account = $I->addNewSubscription();
 
         $I->checkDomainList($account['domain'], true);
-        $I->checkListDomainsPageLayout();
         $I->checkToggleProtection($account['domain']);
         $I->checkLoginFunctionality($account['domain']);
     }

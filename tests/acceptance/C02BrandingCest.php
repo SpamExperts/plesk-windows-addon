@@ -24,12 +24,31 @@ class C02BrandingCest
         $this->brandname = "Branded Professional Spam Filter";
         $I->submitBrandingSettingForm($this->brandname);
         $I->checkSettingsSavedSuccessfully();
+
         $I->checkBrandingForRoot($this->brandname);
 
         list($resellerUsername, $resellerPassword, $resellerId) = $I->createReseller();
+        list($customerUsername, $customerPassword, ) = $I->createCustomer();
         $I->shareIp($resellerId);
+
         $I->logout();
         $I->login($resellerUsername, $resellerPassword);
         $I->checkBrandingForReseller($this->brandname);
+
+        $I->logout();
+        $I->login($customerUsername, $customerPassword, true);
+        $I->checkBrandingForCustomer($this->brandname);
+//        $I->goToPage(ProfessionalSpamFilterPage::BRANDING_BTN, BrandingPage::TITLE);
+//        $I->checkPageLayout();
+//        $this->brandname = "Branded Professional Spam Filter";
+//        $I->submitBrandingSettingForm($this->brandname);
+//        $I->checkSettingsSavedSuccessfully();
+//        $I->checkBrandingForRoot($this->brandname);
+//
+//        list($resellerUsername, $resellerPassword, $resellerId) = $I->createReseller();
+//        $I->shareIp($resellerId);
+//        $I->logout();
+//        $I->login($resellerUsername, $resellerPassword);
+//        $I->checkBrandingForReseller($this->brandname);
     }
 }

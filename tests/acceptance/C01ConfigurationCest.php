@@ -276,29 +276,6 @@ class C01ConfigurationCest
         $I->searchDomainList($aliasDomain);
         $I->see($aliasDomain, DomainListPage::DOMAIN_TABLE);
         $I->see("alias", DomainListPage::DOMAIN_TABLE);
-//
-//        $I->setConfigurationOptions(
-//            array(
-//                ConfigurationPage::PROCESS_ADDON_OPT => true,
-//                ConfigurationPage::ADD_ADDON_OPT => true,
-//            )
-//        );
-//
-//        $I->shareIp();
-//        list($customerUsername, $customerPassword, $domain) = $I->createCustomer();
-//        $I->click("//tr[contains(.,'{$customerUsername}')]//a[@class='s-btn sb-login']");
-//
-//        $I->click("//a[@id='buttonAddDomainAlias']");
-//        $I->waitForText('Add a Domain Alias');
-//        $aliasDomain = 'alias' . $domain;
-//        $I->fillField("//input[@id='name']", $aliasDomain);
-//        $I->click("//button[@name='send']");
-//        $I->waitForText("The domain alias $aliasDomain was created.", 30);
-//
-//        $I->goToPage(ProfessionalSpamFilterPage::DOMAIN_LIST_BTN, DomainListPage::TITLE);
-//        $I->searchDomainList($aliasDomain);
-//        $I->see($aliasDomain, DomainListPage::DOMAIN_TABLE);
-//        $I->see("alias", DomainListPage::DOMAIN_TABLE);
     }
 
     public function verifyRedirectBackToPleskUponLogout(ConfigurationSteps $I)

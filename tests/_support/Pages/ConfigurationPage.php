@@ -32,7 +32,7 @@ class ConfigurationPage
 
     const USE_EXISTING_MX_OPT               = "//input[@data-original-title='Use existing MX records as routes in the spamfilter.']";
     const DO_NOT_PROTECT_REMOTE_DOMAINS_OPT = "//input[@data-original-title='Do not protect remote domains']";
-    const REDIRECT_BACK_TO_OPT        = "//input[@data-original-title='Redirect back to Plesk upon logout']";
+    const REDIRECT_BACK_TO_OPT        = "//input[contains(@data-original-title,'Redirect back to Plesk upon logout')]";
 
     const ADD_DOMAIN_DURING_LOGIN_OPT       = "//input[@data-original-title='Add the domain to the spamfilter during login if it does not exist']";
     const FORCE_CHANGE_MX_ROUTE_OPT         = "//input[@data-original-title='Force changing route &amp; MX records, even if the domain exists.']";

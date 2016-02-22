@@ -3,6 +3,8 @@
 namespace Step\Acceptance;
 
 use Pages\BulkprotectPage;
+use Pages\PleskLinuxClientPage;
+use Pages\PleskWindowsClientPage;
 use Pages\ProfessionalSpamFilterPage;
 
 class BulkProtectSteps extends CommonSteps
@@ -55,5 +57,4 @@ class BulkProtectSteps extends CommonSteps
         $I->waitForText("Bulkprotect has finished", 1000);
         $I->waitForText("The bulkprotect process has finished its work. Please see the tables below for the results.", 1000);
     }
-
 }

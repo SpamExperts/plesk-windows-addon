@@ -37,6 +37,12 @@ class DomainListSteps extends CommonSteps
     {
         $I = $this;
         $I->amGoingTo("\n\n --- Search for {$domain} domain --- \n");
+
+        if (!$I->getElementsCount("//h3[contains(.,'List Domains')]")){
+            $I->goToPage(ProfessionalSpamFilterPage::DOMAIN_LIST_BTN, DomainListPage::TITLE);
+            $I->waitForElementVisible(DomainListPage::SEARCH_FIELD);
+        }
+
         $I->fillField(DomainListPage::SEARCH_FIELD, $domain);
         $I->click(DomainListPage::SEARCH_BTN);
         $I->waitForText('Page 1 of 1. Total Items: 1');

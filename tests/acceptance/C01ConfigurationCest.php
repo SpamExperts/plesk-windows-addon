@@ -260,11 +260,11 @@ class C01ConfigurationCest
         $I->setProcessAddOnAndParkedDomainsOption();
         $I->setAddOnAsAnAliasOption();
         $I->shareIp();
-        list($customerUsername, $customerPassword, $domain) = $I->createCustomer("Unlimited");
-        $I->logout();
-        $I->login($customerUsername, $customerPassword, true);
-
-        $I->click("//a[@id='buttonAddDomainAlias']");
+        list($customerUsername, $customerPassword, $domain) = $I->createCustomer();
+//        $I->logout();
+//        $I->login($customerUsername, $customerPassword, true);
+        $I->openDomain($domain);
+        $I->click("//a[contains(@id,'buttonAddDomainAlias')]");
         $I->waitForText('Add a Domain Alias');
         $aliasDomain = 'alias' . $domain;
         $I->fillField("//input[@id='name']", $aliasDomain);
@@ -280,16 +280,11 @@ class C01ConfigurationCest
 
     public function verifyRedirectBackToPleskUponLogout(ConfigurationSteps $I)
     {
-        $I->goToPage(ProfessionalSpamFilterPage::CONFIGURATION_BTN, ConfigurationPage::TITLE);
         $I->removeAllDomains();
-        $I->setConfigurationOptions(
-            array(
-                ConfigurationPage::REDIRECT_BACK_TO_OPT => true,
-            )
-        );
+        $I->goToPage(ProfessionalSpamFilterPage::CONFIGURATION_BTN, ConfigurationPage::TITLE);
+        $I->setRedirectBackToPleskOption();
 
         $account = $I->addNewSubscription();
-        $I->checkDomainList($account['domain'], true);
         $I->searchDomainList($account['domain']);
         $I->loginOnSpampanel($account['domain']);
         $I->logoutFromSpampanel();

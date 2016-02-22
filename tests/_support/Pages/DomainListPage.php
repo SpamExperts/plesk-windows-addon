@@ -7,7 +7,7 @@ class DomainListPage
     const TITLE = "List Domains";
     const DESCRIPTION = "This page shows you a list of all domains owned by you and its respective status in the spamfilter.";
 
-    const SEARCH_FIELD                   = "//input[@id='searchInput']";
+    const SEARCH_FIELD                   = "//input[contains(@id,'searchInput')]";
     const SEARCH_BTN                     = "//button[@id='searchSubmit']";
     const RESET_BTN                      = "//button[@id='searchReset']";
     const CHECK_STATUS_FOR_ALL_DOMAIN    = "//button[@id='checkAllDomains']";

@@ -13,18 +13,17 @@ class UpdateSteps extends CommonSteps
         $I->amGoingTo("\n\n --- Gheck update page layout --- \n");
 
         $I->see(UpdatePage::TITLE, "//h3");
-        $I->see(UpdatePage::WIN_DESCRIPTION_A);
-        $I->see(UpdatePage::WIN_DESCRIPTION_URL);
-        $I->see(UpdatePage::WIN_DESCRIPTION_B);
-        $I->see(UpdatePage::WIN_DESCRIPTION_COMMAND);
-
-        $I->seeElement(ProfessionalSpamFilterPage::CONFIGURATION_LINK);
-        $I->seeElement(ProfessionalSpamFilterPage::BRANDING_LINK);
-        $I->seeElement(ProfessionalSpamFilterPage::DOMAIN_LIST_LINK);
-        $I->seeElement(ProfessionalSpamFilterPage::BRANDING_LINK);
-        $I->seeElement(ProfessionalSpamFilterPage::MIGRATION_LINK);
-        $I->seeElement(ProfessionalSpamFilterPage::UPDATE_LINK);
-        $I->seeElement(ProfessionalSpamFilterPage::SUPPORT_LINK);
+        $I->see(UpdatePage::DESCRIPTION_A);
+        $I->see(UpdatePage::DESCRIPTION_B);
     }
 
+    public function submitUpgradeForm()
+    {
+        $this->click('Click to upgrade');
+    }
+
+    public function checkNoticeAfterUpgrade()
+    {
+        $this->see('There is no stable update available to install. You are already at the latest version.');
+    }
 }

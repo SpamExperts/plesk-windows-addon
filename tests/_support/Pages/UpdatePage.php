@@ -5,8 +5,8 @@ namespace Pages;
 class UpdatePage
 {
     const TITLE = "Update";
-    const DESCRIPTION_A = "On this page you can manually update the addon to the latest version.";
-    const DESCRIPTION_B = "Auto-update is currently disabled. You can modify this in the configuration";
+    const DESCRIPTION_A = "http://download.seinternal.com/integration/installers/plesk-windows/installer.bat";
+    const DESCRIPTION_B = "cmd /k installer.bat";
 
     const TIER_DROP_DOWN        = "//select[@id='update_type']";
     const FORCE_REINSTALL_INPUT = "//input[@id='force_reinstall']";

@@ -4,6 +4,7 @@ namespace Pages;
 
 class ProfessionalSpamFilterPage
 {
+    const PROSPAMFILTER_BTN = "//a[@href='/modules/prospamfilter/']";
     const CONFIGURATION_BTN = "//a[@href='?q=admin/settings']";
     const BRANDING_BTN      = "//a[@href='?q=admin/branding']";
     const DOMAIN_LIST_BTN   = "//a[@href='?q=reseller/listdomains']";

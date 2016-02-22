@@ -5,6 +5,8 @@ namespace Step\Acceptance;
 use Pages\DomainListPage;
 use Pages\ConfigurationPage;
 use Pages\ProfessionalSpamFilterPage;
+use Pages\PleskWindowsClientPage;
+
 
 
 class ConfigurationSteps extends DomainListSteps
@@ -156,6 +158,7 @@ class ConfigurationSteps extends DomainListSteps
         $this->click(ConfigurationPage::SAVE_SETTINGS_BTN);
         $this->see('The settings have been saved.');
     }
+
     private function getDefaultConfigurationOptions()
     {
         return array(
@@ -220,6 +223,17 @@ class ConfigurationSteps extends DomainListSteps
             $this->checkOption(ConfigurationPage::ADD_ADDON_OPT);
         } else {
             $this->uncheckOption(ConfigurationPage::ADD_ADDON_OPT);
+        }
+        $this->click(ConfigurationPage::SAVE_SETTINGS_BTN);
+        $this->checkSubmissionIsSuccessful();
+    }
+
+    public function setRedirectBackToPleskOption($set = true)
+    {
+        if ($set) {
+            $this->checkOption(ConfigurationPage::REDIRECT_BACK_TO_OPT);
+        } else {
+            $this->uncheckOption(ConfigurationPage::REDIRECT_BACK_TO_OPT);
         }
         $this->click(ConfigurationPage::SAVE_SETTINGS_BTN);
         $this->checkSubmissionIsSuccessful();

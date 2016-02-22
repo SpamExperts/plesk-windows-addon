@@ -4,6 +4,7 @@ use Pages\DomainListPage;
 use Pages\ConfigurationPage;
 use Pages\ProfessionalSpamFilterPage;
 use Step\Acceptance\ConfigurationSteps;
+use Step\Acceptance\DomainListSteps;
 
 
 class C03DomainListCest
@@ -13,6 +14,10 @@ class C03DomainListCest
     public function _before(ConfigurationSteps $I)
     {
         $I->login();
+        $I->goToPage(ProfessionalSpamFilterPage::CONFIGURATION_BTN, ConfigurationPage::TITLE);
+        $I->setConfigurationOptions(array(
+            ConfigurationPage::AUTOMATICALLY_ADD_DOMAINS_OPT => false,
+        ));
     }
 
     public function _after(ConfigurationSteps $I)
@@ -35,24 +40,13 @@ class C03DomainListCest
 
     public function verifyDomainListAsReseller(ConfigurationSteps $I)
     {
-        $I->goToPage(ProfessionalSpamFilterPage::CONFIGURATION_BTN, ConfigurationPage::TITLE);
-
-        $I->setConfigurationOptions(
-            array(
-                ConfigurationPage::AUTOMATICALLY_ADD_DOMAINS_OPT => false,
-                ConfigurationPage::AUTOMATICALLY_DELETE_DOMAINS_OPT => true,
-            )
-        );
-
         list($resellerUsername, $resellerPassword, $resellerId) = $I->createReseller();
         $I->shareIp($resellerId);
         $I->logout();
-
         $I->login($resellerUsername, $resellerPassword);
         $I->checkPsfPresentForReseller();
         $account = $I->addNewSubscription();
-
-        $I->checkDomainList($account['domain'], false);
+        $I->checkDomainList($account['domain']);
         $I->checkToggleProtection($account['domain']);
         $I->checkLoginFunctionality($account['domain']);
     }

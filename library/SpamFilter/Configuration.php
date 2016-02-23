@@ -218,6 +218,9 @@ class SpamFilter_Configuration
             foreach ($cfgData as $k => $v){
                 $str .= addslashes($k.'="'.$v.'"') . " ";
             }
+
+            $str = str_replace('"', '""', $str);
+
             shell_exec('"' . $binary . '" --save ' . CFG_FILE . ' "' . $str . '"');
             return true;
     }

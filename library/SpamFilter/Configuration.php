@@ -214,15 +214,14 @@ class SpamFilter_Configuration
 
             return false;
         }
-            $str = '';
-            foreach ($cfgData as $k => $v){
-                $str .= addslashes($k.'="'.$v.'"') . " ";
-            }
 
-            $str = str_replace('"', '""', $str);
+        $str = '';
+        foreach ($cfgData as $k => $v){
+            $str .= $k.'="\"'.str_replace('"', '\"\"',$v).'\""' . " ";
+        }
 
-            shell_exec('"' . $binary . '" --save ' . CFG_FILE . ' "' . $str . '"');
-            return true;
+        shell_exec('"' . $binary . '" --save ' . CFG_FILE . ' "' . $str . '"');
+        return true;
     }
 
     /**

@@ -62,7 +62,7 @@ class SpamFilter_Config_String extends Zend_Config_Ini
 		            }
                 }
 
-                $array[ $key ] = $value;
+                $array[ $key ] = str_replace('""', '"', $value);
             }
         }
         return $array;

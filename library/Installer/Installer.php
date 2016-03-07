@@ -103,15 +103,18 @@ class Installer
         $this->output->info("Done");
         $this->output->info("Applying changes for configuration directory");
         // We need to break inheritance first
-        exec('icacls "' . $_ENV['ProgramFiles'] . DS . 'SpamExperts" /inheritance:d /T');
-        exec('icacls "' . $_ENV['ProgramFiles'] . DS . 'SpamExperts"  /remove:d psaadm /remove:d psacln /T' );
-        exec('icacls "' . $_ENV['ProgramData'] . DS . 'SpamExperts" /inheritance:d /T');
+        $programFilesDir = getenv('ProgramFiles');
+        $programDataDir = getenv('ProgramData');
+
+        exec('icacls "' . $programFilesDir . DS . 'SpamExperts" /inheritance:d /T');
+        exec('icacls "' . $programFilesDir . DS . 'SpamExperts"  /remove:d psaadm /remove:d psacln /T' );
+        exec('icacls "' . $programDataDir . DS . 'SpamExperts" /inheritance:d /T');
         // sleep for a while
         sleep(5);
-        $this->output->info("Applying changes for " . $_ENV['ProgramData'] . DS . "SpamExperts");
-        exec('"' . $this->paths->plesk . 'admin' . DS . 'bin' . DS . 'ApplySecurity.exe" --apply-to-directory --directory="' . $_ENV['ProgramData'] . DS . 'SpamExperts"');
-        $this->output->info("Applying changes for " . $_ENV['ProgramFiles'] . DS . "SpamExperts");
-        exec('"' . $this->paths->plesk . 'admin' . DS . 'bin' . DS . 'ApplySecurity.exe" --apply-to-directory --directory="' . $_ENV['ProgramFiles'] . DS . 'SpamExperts"');
+        $this->output->info("Applying changes for " . $programDataDir . DS . "SpamExperts");
+        exec('"' . $this->paths->plesk . 'admin' . DS . 'bin' . DS . 'ApplySecurity.exe" --apply-to-directory --directory="' . $programDataDir . DS . 'SpamExperts"');
+        $this->output->info("Applying changes for " . $programFilesDir . DS . "SpamExperts");
+        exec('"' . $this->paths->plesk . 'admin' . DS . 'bin' . DS . 'ApplySecurity.exe" --apply-to-directory --directory="' . $programFilesDir . DS . 'SpamExperts"');
         $this->output->info("Done");
     }
 
@@ -139,7 +142,7 @@ class Installer
 
     private function createCacheFolder()
     {
-        $cacheFolder = $_ENV['ProgramData'] . DS . 'SpamExperts' . DS . 'tmp' . DS . 'cache';
+        $cacheFolder = getenv('ProgramData') . DS . 'SpamExperts' . DS . 'tmp' . DS . 'cache';
 
         if (file_exists($cacheFolder)) {
             return;

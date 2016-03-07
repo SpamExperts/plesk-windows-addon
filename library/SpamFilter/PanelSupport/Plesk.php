@@ -85,7 +85,8 @@ class SpamFilter_PanelSupport_Plesk
     public function __construct($options = array(), Plesk_Driver_Ip $ipDriver = null)
     {
         $this->_logger = Zend_Registry::get('logger');
-        if (!file_exists("/usr/local/psa/") && !file_exists($_ENV['plesk_dir'])) {
+		$pleskDir = getenv('plesk_dir');
+        if (!file_exists("/usr/local/psa/") && (!($pleskDir) || !file_exists($pleskDir))) {
             $this->_logger->crit("Wrong Panelsupport library loaded. This is not Plesk.");
             throw new Exception("Wrong Panelsupport library loaded");
         }
@@ -1559,18 +1560,14 @@ class SpamFilter_PanelSupport_Plesk
      * @return string port
      */
     public function getMySQLPort(){
-        if(file_exists(PLESK_DIR . 'MySQL' . DS . 'Data' . DS . 'my.ini')){
-            $handle = fopen(PLESK_DIR . 'MySQL' . DS . 'Data' . DS . 'my.ini', "r");
-            while (!feof($handle)){
-                $line = fgets($handle);
-                if(strpos($line,'port=') !== false){
-                    $x = explode('=',$line);
-                    $port = trim($x[1]);
-                    return $port;
-                }
-                
-            }
+        $result = shell_exec('reg query "HKEY_LOCAL_MACHINE\SOFTWARE\Wow6432Node\PLESK\PSA Config\Config" | findstr MySQL_DB_PORT');
+        if ($result) {
+            $result = preg_replace('/\s+/', ' ', trim($result));
+            $port = explode(" ", $result)[2];
+
+            return $port;
         }
+
         // empty string if port is not found
         return '';       
     }    

@@ -6,8 +6,9 @@ if (!defined('IS_PLESK')) {
 }
 
 if (!defined('BASE_PATH')) {
-    if (isset($_ENV['plesk_dir'])) {
-        define('BASE_PATH', $_ENV['ProgramFiles'] . DIRECTORY_SEPARATOR . 'SpamExperts'. DIRECTORY_SEPARATOR . 'Professional Spam Filter');   
+    $pleskDir = getenv('plesk_dir');
+    if ($pleskDir) {
+        define('BASE_PATH', getenv('ProgramFiles') . DIRECTORY_SEPARATOR . 'SpamExperts'. DIRECTORY_SEPARATOR . 'Professional Spam Filter');
     } else {
         define('BASE_PATH', '/usr/local/prospamfilter');
     }

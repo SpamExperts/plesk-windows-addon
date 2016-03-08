@@ -50,10 +50,10 @@ $debug_enabled = true;
 
 define('DS', DIRECTORY_SEPARATOR);
 
-define('PLESK_DIR', $_ENV['plesk_dir']);
-define('DEST_PATH', $_ENV['ProgramFiles'] . DS . "SpamExperts" . DS . "Professional Spam Filter");
-define('BASE_PATH', $_ENV['TMP'] . DS . "prospamfilter");
-define('CFG_PATH', $_ENV['ProgramData'] . DS . "SpamExperts" . DS . "config");
+define('PLESK_DIR', getenv('plesk_dir'));
+define('DEST_PATH', getenv('ProgramFiles') . DS . "SpamExperts" . DS . "Professional Spam Filter");
+define('BASE_PATH', getenv('TMP') . DS . "prospamfilter");
+define('CFG_PATH', getenv('ProgramData') . DS . "SpamExperts" . DS . "config");
 
 require_once BASE_PATH . DS . 'library' . DS . 'functions.php';
 require_once BASE_PATH . DS . 'library' . DS . 'SpamFilter' . DS . 'Core.php';

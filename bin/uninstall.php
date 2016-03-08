@@ -416,7 +416,7 @@ class Uninstaller
 	{
 		echo "Removing config folder...";
                 if(SpamFilter_Core::isWindows()){
-                    rrmdir($_ENV['ProgramData']. DS ."SpamExperts");    
+                    rrmdir(getenv('ProgramData'). DS ."SpamExperts");
                 } else {
                     rrmdir(CFG_PATH);
                 }

@@ -8,8 +8,10 @@ header("Content-Type: text/html; charset=UTF-8");
 
 $isWindows = stripos(PHP_OS, 'win') === 0;
 
-if(isset($_ENV['ProgramFiles']) && $isWindows){
-    include($_ENV['ProgramFiles'] . DIRECTORY_SEPARATOR . "SpamExperts" . DIRECTORY_SEPARATOR . "Professional Spam Filter" . DIRECTORY_SEPARATOR . "application" . DIRECTORY_SEPARATOR . "bootstrap.php");
+$programFilesDir = getenv('ProgramFiles');
+
+if($programFilesDir && $isWindows){
+    include($programFilesDir . DIRECTORY_SEPARATOR . "SpamExperts" . DIRECTORY_SEPARATOR . "Professional Spam Filter" . DIRECTORY_SEPARATOR . "application" . DIRECTORY_SEPARATOR . "bootstrap.php");
 } else {
     include('/usr/local/prospamfilter/application/bootstrap.php');
 }

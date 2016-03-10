@@ -199,7 +199,9 @@ class AjaxController extends Zend_Controller_Action
                     exit(Zend_Json::encode($output));
                 }
 
-                if (!$this->_panel->validateOwnership($domain)) {
+                $domainToValidate = $owner_domain ? $owner_domain : $domain;
+
+                if (!$this->_panel->validateOwnership($domainToValidate)) {
                     $output ['message'] = sprintf($this->t->_("You're not allowed to operate on the domain '%s'"), htmlspecialchars($domain, ENT_QUOTES, 'UTF-8'));
                     $output ['status'] = 'error';
                     exit(Zend_Json::encode($output));
@@ -215,7 +217,7 @@ class AjaxController extends Zend_Controller_Action
                  * @see https://trac.spamexperts.com/ticket/26075
                  */
 
-                if (0 < $config->add_extra_alias && in_array($type, array('subdomain', 'parked', 'addon'))) {
+                if (0 < $config->add_extra_alias && in_array($type, array('subdomain', 'parked', 'addon', 'alias'))) {
                     $status['reason_status'] = "Skipped: Addon, parked and subdomains will be treated as an alias instead of a normal domain. Try to add/remove the domain";
                     $status['status'] = 'error';
                     $status['rawresult'] = SpamFilter_Hooks::SKIP_EXTRA_ALIAS;
@@ -284,6 +286,10 @@ class AjaxController extends Zend_Controller_Action
                     switch ($status['rawresult']) {
                         case SpamFilter_Hooks::ALREADYEXISTS_NOT_OWNER:
                             $reason = $this->t->_(' you are not the owner of it.');
+                            break;
+
+                        case SpamFilter_Hooks::SKIP_EXTRA_ALIAS:
+                            $reason = $this->t->_(' because subdomains and alias domains are treated as aliases.');
                             break;
 
                         case SpamFilter_Hooks::SKIP_REMOTE:

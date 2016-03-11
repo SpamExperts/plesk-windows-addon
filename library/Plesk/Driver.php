@@ -64,7 +64,7 @@ class Plesk_Driver
 			return $response['server']['get_protos']['result']['protos']['proto'];
 		}
 
-		return [];
+		return array();
 	}
 
 	public function doRequest( $data, $version='1.6.0.2', $returnXml = false )

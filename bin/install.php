@@ -42,9 +42,6 @@
 * @since     2.0
 */
 
-use Installer\Installer;
-use Output\ConsoleOutput;
-
 $path_override = true;
 $debug_enabled = true;
 
@@ -66,14 +63,14 @@ require_once BASE_PATH . DS . 'library' . DS . 'Output' . DS . 'OutputInterface.
 require_once BASE_PATH . DS . 'library' . DS . 'Output' . DS . 'ConsoleOutput.php';
 require_once BASE_PATH . DS . 'application' . DS . 'bootstrap.php';
 
-$paths = new \Installer\Helper\InstallPaths();
+$paths = new Installer_InstallPaths();
 $paths->base = BASE_PATH;
 $paths->destination = DEST_PATH;
 $paths->config = CFG_PATH;
 $paths->plesk = PLESK_DIR;
 
-$filesystem = \Filesystem\AbstractFilesystem::createFilesystem();
-$output = new ConsoleOutput();
+$filesystem = Filesystem_AbstractFilesystem::createFilesystem();
+$output = new Output_ConsoleOutput();
 
 $installer = new Installer($paths, $filesystem, $output);
 $installer->install();

@@ -1563,7 +1563,8 @@ class SpamFilter_PanelSupport_Plesk
         $result = shell_exec('reg query "HKEY_LOCAL_MACHINE\SOFTWARE\Wow6432Node\PLESK\PSA Config\Config" | findstr MySQL_DB_PORT');
         if ($result) {
             $result = preg_replace('/\s+/', ' ', trim($result));
-            $port = explode(" ", $result)[2];
+            $port = explode(" ", $result);
+            $port = $port[2];
 
             return $port;
         }

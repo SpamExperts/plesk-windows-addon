@@ -279,9 +279,8 @@ class DomainController extends Zend_Controller_Action
             $logouturl = $request->getScheme() . '://' . $host;
 			Zend_Registry::get('logger')->debug("[DomainController] Setting logout URL to '{$logouturl}' ");
 
-            $cpSecurityToken = getenv('cp_security_token');
-            if ($cpSecurityToken) {
-                $logouturl .= "{$cpSecurityToken}/";
+            if (!empty($_ENV['cp_security_token'])) {
+                $logouturl .= "{$_ENV['cp_security_token']}/";
             }
             if ($this->isValidUrl($logouturl)) {
                 $login_request['logouturl'] = base64_encode( $logouturl );

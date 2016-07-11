@@ -1,6 +1,8 @@
 <?php
 
-interface Output_OutputInterface
+namespace Output;
+
+interface OutputInterface
 {
     public function write($message, $prefix = null);
     public function ok($message);

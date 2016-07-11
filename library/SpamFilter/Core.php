@@ -125,8 +125,7 @@ class SpamFilter_Core
 	 */
 	public static function getPanelType()
 	{
-		$pleskDir = getenv('plesk_dir');
-        if (file_exists('/usr/local/psa/') || ($pleskDir && file_exists($pleskDir))) {
+        if (file_exists('/usr/local/psa/') || file_exists($_ENV['plesk_dir'])) {
 			Zend_Registry::get('logger')->info("[Core] Panel is determined to be Plesk.");
 
 			return 'PLESK';
@@ -234,11 +233,10 @@ class SpamFilter_Core
 
         $loginProperty = self::getPanelType() == 'PLESK' && class_exists('pm_Session', false) ? pm_Session::getClient()->getProperty('login') : false;
 
-		$remoteUser = getenv('REMOTE_USER');
-        if ($remoteUser) {
-            $logger->debug("[Core] Returning username ({".$remoteUser."}) retrieved from env as remote_user");
+        if (isset($_ENV['REMOTE_USER']) && (!empty($_ENV['REMOTE_USER']))) {
+            $logger->debug("[Core] Returning username ({$_ENV['REMOTE_USER']}) retrieved from env as remote_user");
 
-			return $remoteUser;
+			return $_ENV['REMOTE_USER'];
 		} elseif (isset($_SERVER['REMOTE_USER']) && (!empty($_SERVER['REMOTE_USER']))) {
             $logger->debug("[Core] Returning username ({$_SERVER['REMOTE_USER']}) retrieved from $_SERVER (REMOTE_USER)");
 
@@ -309,17 +307,18 @@ class SpamFilter_Core
 
     final static public function invalidateDomainsCaches()
     {
-		self::clearCacheWithPrefix('alldomains_');
-		self::clearCacheWithPrefix('user_domains_');
-		SpamFilter_Panel_Cache::clear('collectiondomains');
-    }
+        try {
+            $prefix = self::getDomainsCacheId();
+        } catch (InvalidArgumentException $e) {
+            $prefix = 'alldomains_';
+        }
 
-	final static private function clearCacheWithPrefix($prefix = null)
-	{
-		foreach (SpamFilter_Panel_Cache::listMatches("$prefix") as $cacheId) {
-			SpamFilter_Panel_Cache::clear($cacheId, false);
-		}
-	}
+        /** @noinspection PhpUndefinedClassInspection */
+        foreach (SpamFilter_Panel_Cache::listMatches("$prefix") as $cacheId) {
+            /** @noinspection PhpUndefinedClassInspection */
+            SpamFilter_Panel_Cache::clear($cacheId, false);
+        }
+    }
 
 	/**
 	 * Checks whether the requirements are met

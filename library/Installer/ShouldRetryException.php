@@ -1,4 +1,6 @@
 <?php
 
-class Installer_ShouldRetryException extends Exception
+namespace Installer;
+
+class ShouldRetryException extends \Exception
 {}

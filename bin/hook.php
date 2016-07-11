@@ -54,7 +54,6 @@ if (!Zend_Registry::isRegistered('general_config')) {
     $configuration = new SpamFilter_Configuration(CFG_FILE);
 }
 $config = Zend_Registry::get('general_config');
-$protectionManager = new SpamFilter_ProtectionManager();
 
 $data = argv2array( $argv );
 $action = (isset($data['action']) ? $data['action'] : '');
@@ -89,8 +88,7 @@ switch( $action )
             } else {
                 if ($config->auto_add_domain) {
                     $response .= "\nAdding '{$domain}' to the Antispam filter...";
-                    $status = $protectionManager->protect($domain, null, "domain");
-
+                    $status = $hook->AddDomain($domain);
                     if (!empty($status['reason'])) {
                         $response .= " {$status['reason']} ";
                     }
@@ -118,7 +116,7 @@ switch( $action )
 			$response .= "\nNOT deleting '{$domain}' from the Antispam filter, because removing domains is disabled in the settings.";
 		}
 		break;
-    case 'delsubdomain':
+
     case "park":
     case "addaddondomain":
         if (empty($alias)) {
@@ -130,14 +128,21 @@ switch( $action )
             return false;
         }
 
-		if (!$config->auto_add_domain) {
-			return false;
-		}
+        if (!$config->auto_add_domain) {
+            return false;
+        }
 
-		$type = getSecondaryDomainType($action);
-		$response .= "\nAdding secondary domain '{$alias}' to the Antispam filter...";
-		$status = $protectionManager->protect($alias, $domain, $type);
-		break;
+        if ($config->add_extra_alias) {
+            // Add as alias
+            $response .= "\nAdding '{$alias}' as alias of '{$domain}' to the Antispam filter...";
+            $status = $hook->AddAlias($domain, $alias);
+        } else {
+            // Add as normal domain.
+            $response .= "\nAdding '{$alias}' to the Antispam filter...";
+            $status = $hook->AddDomain($alias);
+        }
+
+        break;
 
     case "restore":
         Zend_Registry::get('logger')->debug("[Hook] Restoring addon and parked domains");
@@ -196,10 +201,16 @@ switch( $action )
 		}
 		if(!$config->handle_extra_domains) { return false; }// Extra/Addon domains DISABLED in plugin
 		if(!$config->auto_del_domain ) { return false; } // The admin said he did not want to have domains removed from the filter.
-
-		$type = getSecondaryDomainType($action);
-		$response .= "\nDeleting '{$alias}' (alias from '{$domain}') from the Antispam filter...";
-		$status = $protectionManager->unprotect($alias, $domain, "alias");
+		if($config->add_extra_alias) // Add the domain as ALIAS for existing one
+		{
+			// Deletion of alias
+			$response .= "\nDeleting '{$alias}' (alias from '{$domain}') from the Antispam filter...";
+			$status = $hook->DelAlias( $domain, $alias );
+		} else {
+			// Deletion of normal domain.
+			$response .= "\nDeleting '{$alias}' from the Antispam filter...";
+			$status = $hook->DelDomain( $alias );
+		}
 		break;
 
 	case "predelaccount":
@@ -252,9 +263,9 @@ switch( $action )
 		// Currently only needed in Plesk
 		Zend_Registry::get('logger')->info("[Hook] Doing postdomainadd for Plesk (Domain: {$domain}).");
                 $status = $hook->AddDomain($domain);
-		Zend_Registry::get('logger')->debug("[Hook] Post add domain finished and returned: " . print_r($status, true));
+                $logger->debug("[Hook] Post add domain finished and returned: " . print_r($status, true));
                 if (!empty($status['reason'])) {
-					Zend_Registry::get('logger')->info("Hook AddDomain status: " . $status['reason']);
+                    $logger->info("Hook AddDomain status: " . $status['reason']);
                 }                
 	break;
 
@@ -264,23 +275,6 @@ switch( $action )
 		break;
 }
 
-function getSecondaryDomainType($action) {
-	if (in_array($action, array("addsubdomain", "delsubdomain"))) {
-		return "subdomain";
-	}
-
-	if (in_array($action, array("unpark", "park"))) {
-		return "parked";
-	}
-
-	if (in_array($action, array("addaddondomain", "deladdondomain"))) {
-		return "addon";
-	}
-
-	Zend_Registry::get('logger')->info("[Hook] Unknown secondary domain type for $action.");
-
-	return null;
-}
 if (isset($status['status'])) {
     if (!$status['status']) {
         $response .= " Failed!\n";

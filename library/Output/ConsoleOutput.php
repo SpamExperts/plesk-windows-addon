@@ -1,6 +1,8 @@
 <?php
 
-class Output_ConsoleOutput implements Output_OutputInterface
+namespace Output;
+
+class ConsoleOutput implements OutputInterface
 {
     public function write($message, $prefix = null)
     {

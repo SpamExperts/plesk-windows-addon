@@ -64,26 +64,21 @@ if( (isset($path_override)) && ($path_override) )
         if(!defined('DS')){
             define('DS', DIRECTORY_SEPARATOR);
         }
-
-        $pleskDir = getenv('plesk_dir');
-
-        if($pleskDir && $isWindows){
+        if(isset($_ENV['plesk_dir']) && $isWindows){
             if(!defined('PLESK_DIR')){
-                define('PLESK_DIR', $pleskDir);
+                define('PLESK_DIR', $_ENV['plesk_dir']);
             }
             if(!defined('BASE_PATH')){
                 // App Installation Directory
-                define('BASE_PATH', getenv('ProgramFiles') . DS . "SpamExperts" . DS . "Professional Spam Filter");
+                define('BASE_PATH', $_ENV['ProgramFiles'] . DS . "SpamExperts" . DS . "Professional Spam Filter");
             }
-
-            $programDataDir = getenv('ProgramData');
             if(!defined('CFG_PATH')){
                 //App Settings Directory
-                define('CFG_PATH', $programDataDir . DS . "SpamExperts" . DS . "config");
+                define('CFG_PATH', $_ENV['ProgramData'] . DS . "SpamExperts" . DS . "config");
             }
             if(!defined('TMP_PATH')){
                 // Temporary directory
-                define('TMP_PATH', $programDataDir . DS . "SpamExperts" . DS . "tmp");
+                define('TMP_PATH', $_ENV['ProgramData'] . DS . "SpamExperts" . DS . "tmp");
             }
      } else {
             if(file_exists("/usr/local/prospamfilter/"))

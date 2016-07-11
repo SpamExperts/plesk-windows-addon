@@ -125,7 +125,8 @@ class SpamFilter_Core
 	 */
 	public static function getPanelType()
 	{
-        if (file_exists('/usr/local/psa/') || file_exists($_ENV['plesk_dir'])) {
+		$pleskDir = getenv('plesk_dir');
+        if (file_exists('/usr/local/psa/') || ($pleskDir && file_exists($pleskDir))) {
 			Zend_Registry::get('logger')->info("[Core] Panel is determined to be Plesk.");
 
 			return 'PLESK';
@@ -233,10 +234,11 @@ class SpamFilter_Core
 
         $loginProperty = self::getPanelType() == 'PLESK' && class_exists('pm_Session', false) ? pm_Session::getClient()->getProperty('login') : false;
 
-        if (isset($_ENV['REMOTE_USER']) && (!empty($_ENV['REMOTE_USER']))) {
-            $logger->debug("[Core] Returning username ({$_ENV['REMOTE_USER']}) retrieved from env as remote_user");
+		$remoteUser = getenv('REMOTE_USER');
+        if ($remoteUser) {
+            $logger->debug("[Core] Returning username ({".$remoteUser."}) retrieved from env as remote_user");
 
-			return $_ENV['REMOTE_USER'];
+			return $remoteUser;
 		} elseif (isset($_SERVER['REMOTE_USER']) && (!empty($_SERVER['REMOTE_USER']))) {
             $logger->debug("[Core] Returning username ({$_SERVER['REMOTE_USER']}) retrieved from $_SERVER (REMOTE_USER)");
 
@@ -307,18 +309,17 @@ class SpamFilter_Core
 
     final static public function invalidateDomainsCaches()
     {
-        try {
-            $prefix = self::getDomainsCacheId();
-        } catch (InvalidArgumentException $e) {
-            $prefix = 'alldomains_';
-        }
-
-        /** @noinspection PhpUndefinedClassInspection */
-        foreach (SpamFilter_Panel_Cache::listMatches("$prefix") as $cacheId) {
-            /** @noinspection PhpUndefinedClassInspection */
-            SpamFilter_Panel_Cache::clear($cacheId, false);
-        }
+		self::clearCacheWithPrefix('alldomains_');
+		self::clearCacheWithPrefix('user_domains_');
+		SpamFilter_Panel_Cache::clear('collectiondomains');
     }
+
+	final static private function clearCacheWithPrefix($prefix = null)
+	{
+		foreach (SpamFilter_Panel_Cache::listMatches("$prefix") as $cacheId) {
+			SpamFilter_Panel_Cache::clear($cacheId, false);
+		}
+	}
 
 	/**
 	 * Checks whether the requirements are met

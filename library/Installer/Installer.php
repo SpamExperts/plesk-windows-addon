@@ -1,30 +1,24 @@
 <?php
 
-namespace Installer;
-
-use Filesystem\AbstractFilesystem;
-use Installer\Helper\InstallPaths;
-use Output\OutputInterface;
-
 class Installer
 {
     /**
-     * @var AbstractFilesystem
+     * @var Filesystem_AbstractFilesystem
      */
     protected $filesystem;
 
     /**
-     * @var InstallPaths
+     * @var Installer_InstallPaths
      */
     protected $paths;
 
     /**
-     * @var \SpamFilter_PanelSupport_Plesk
+     * @var SpamFilter_PanelSupport_Plesk
      */
     protected $panelSupport;
 
     /**
-     * @var \SpamFilter_Logger
+     * @var SpamFilter_Logger
      */
     protected $logger;
 
@@ -34,16 +28,16 @@ class Installer
     protected $currentVersion;
 
     /**
-     * @var OutputInterface
+     * @var Output_OutputInterface
      */
     protected $output;
 
-    public function __construct(InstallPaths $paths, AbstractFilesystem $filesystem, OutputInterface $output)
+    public function __construct(Installer_InstallPaths $paths, Filesystem_AbstractFilesystem $filesystem, Output_OutputInterface $output)
     {
         $this->output = $output;
         $this->filesystem = $filesystem;
         $this->paths = $paths;
-        $this->logger = \Zend_Registry::get('logger');
+        $this->logger = Zend_Registry::get('logger');
         $this->findCurrentVersionAndInitPanelSupport();
     }
 
@@ -56,7 +50,7 @@ class Installer
             $this->output->warn("The installation process failed. Running the installer again should fix the problem.");
             $this->logger->debug($e->getMessage());
             $this->logger->debug($e->getTraceAsString());
-        } catch (\Exception $exception) {
+        } catch (Exception $exception) {
             $this->output->error($exception->getMessage());
             $this->logger->debug($exception->getMessage());
             $this->logger->debug($exception->getTraceAsString());
@@ -103,15 +97,18 @@ class Installer
         $this->output->info("Done");
         $this->output->info("Applying changes for configuration directory");
         // We need to break inheritance first
-        exec('icacls "' . $_ENV['ProgramFiles'] . DS . 'SpamExperts" /inheritance:d /T');
-        exec('icacls "' . $_ENV['ProgramFiles'] . DS . 'SpamExperts"  /remove:d psaadm /remove:d psacln /T' );
-        exec('icacls "' . $_ENV['ProgramData'] . DS . 'SpamExperts" /inheritance:d /T');
+        $programFilesDir = getenv('ProgramFiles');
+        $programDataDir = getenv('ProgramData');
+
+        exec('icacls "' . $programFilesDir . DS . 'SpamExperts" /inheritance:d /T');
+        exec('icacls "' . $programFilesDir . DS . 'SpamExperts"  /remove:d psaadm /remove:d psacln /T' );
+        exec('icacls "' . $programDataDir . DS . 'SpamExperts" /inheritance:d /T');
         // sleep for a while
         sleep(5);
-        $this->output->info("Applying changes for " . $_ENV['ProgramData'] . DS . "SpamExperts");
-        exec('"' . $this->paths->plesk . 'admin' . DS . 'bin' . DS . 'ApplySecurity.exe" --apply-to-directory --directory="' . $_ENV['ProgramData'] . DS . 'SpamExperts"');
-        $this->output->info("Applying changes for " . $_ENV['ProgramFiles'] . DS . "SpamExperts");
-        exec('"' . $this->paths->plesk . 'admin' . DS . 'bin' . DS . 'ApplySecurity.exe" --apply-to-directory --directory="' . $_ENV['ProgramFiles'] . DS . 'SpamExperts"');
+        $this->output->info("Applying changes for " . $programDataDir . DS . "SpamExperts");
+        exec('"' . $this->paths->plesk . 'admin' . DS . 'bin' . DS . 'ApplySecurity.exe" --apply-to-directory --directory="' . $programDataDir . DS . 'SpamExperts"');
+        $this->output->info("Applying changes for " . $programFilesDir . DS . "SpamExperts");
+        exec('"' . $this->paths->plesk . 'admin' . DS . 'bin' . DS . 'ApplySecurity.exe" --apply-to-directory --directory="' . $programFilesDir . DS . 'SpamExperts"');
         $this->output->info("Done");
     }
 
@@ -139,7 +136,7 @@ class Installer
 
     private function createCacheFolder()
     {
-        $cacheFolder = $_ENV['ProgramData'] . DS . 'SpamExperts' . DS . 'tmp' . DS . 'cache';
+        $cacheFolder = getenv('ProgramData') . DS . 'SpamExperts' . DS . 'tmp' . DS . 'cache';
 
         if (file_exists($cacheFolder)) {
             return;
@@ -174,12 +171,12 @@ class Installer
             $this->currentVersion = null; //no version set, must be an upgrade
         }
 
-        $this->panelSupport = new \SpamFilter_PanelSupport_Plesk($options);
+        $this->panelSupport = new SpamFilter_PanelSupport_Plesk($options);
     }
 
     private function setupBrand()
     {
-        $brand = new \SpamFilter_Brand();
+        $brand = new SpamFilter_Brand();
 
         // Setup initial icon, but only if it does not exist already.
         $icon_content = base64_decode($brand->getBrandIcon(true));
@@ -206,7 +203,7 @@ class Installer
 
         try {
             $whoami = shell_exec('whoami');
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             $this->output->error(
                 "Error checking current user (via whoami), do you have the command 'whoami' or did you disallow shell_exec?."
             );
@@ -214,7 +211,7 @@ class Installer
         }
 
         // More detailed testing
-        $selfcheck = \SpamFilter_Core::selfCheck(false, array('skipapi' => true));
+        $selfcheck = SpamFilter_Core::selfCheck(false, array('skipapi' => true));
         $this->output->info("Running selfcheck...");
         if ($selfcheck['status'] != true) {
             if ($selfcheck['critital'] == true) {

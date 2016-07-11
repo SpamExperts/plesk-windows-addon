@@ -45,18 +45,24 @@ class C01ConfigurationCest
         );
         $account = $I->addNewSubscription();
         $I->checkDomainIsNotPresentInFilter($account['domain']);
+        $I->apiCheckDomainNotExists($account['domain']);
     }
 
     public function verifyAutomaticallyAddDomainToPsf(ConfigurationSteps $I)
     {
-        $I->setConfigurationOptions(
-            array(
-                ConfigurationPage::AUTOMATICALLY_ADD_DOMAINS_OPT => true,
-            )
-        );
-        $account = $I->addNewSubscription();
-        $I->checkDomainIsPresentInFilter($account['domain']);
+        $I->setConfigurationOptions(array(
+            ConfigurationPage::AUTOMATICALLY_ADD_DOMAINS_OPT => true,
+            ConfigurationPage::PROCESS_ADDON_OPT => true,
+            ConfigurationPage::DO_NOT_PROTECT_REMOTE_DOMAINS_OPT => false,
+        ));
+        list($customerUsername, $customerPassword, $domain) = $I->createCustomer();
+        $I->changeCustomerPlan($customerUsername);
+        $I->checkDomainIsPresentInFilter($domain);
+        $I->apiCheckDomainExists($domain);
 
+        $I->openDomain($domain);
+        $alias = $I->addAliasAsClient($domain);
+        $I->apiCheckDomainExists($alias);
     }
 
     public function verifyNotAutomaticallyDeleteDomainToPsf(ConfigurationSteps $I)
@@ -78,7 +84,6 @@ class C01ConfigurationCest
 
     public function verifyAutomaticallyDeleteDomainToPsf(ConfigurationSteps $I)
     {
-
         $I->setConfigurationOptions(
             array(
                 ConfigurationPage::AUTOMATICALLY_ADD_DOMAINS_OPT => false,
@@ -93,6 +98,29 @@ class C01ConfigurationCest
         $I->apiCheckDomainNotExists($account['domain']);
     }
 
+    public function verifyAutmaticallyDeleteSecondaryDomains(ConfigurationSteps $I)
+    {
+        $I->setConfigurationOptions(array(
+            ConfigurationPage::AUTOMATICALLY_ADD_DOMAINS_OPT => true,
+            ConfigurationPage::PROCESS_ADDON_OPT => true,
+            ConfigurationPage::DO_NOT_PROTECT_REMOTE_DOMAINS_OPT => false,
+            ConfigurationPage::AUTOMATICALLY_DELETE_DOMAINS_OPT => true
+
+        ));
+
+        list($customerUsername, $customerPassword, $domain) = $I->createCustomer();
+        $I->changeCustomerPlan($customerUsername);
+        $I->checkDomainIsPresentInFilter($domain);
+        $I->apiCheckDomainExists($domain);
+
+        $I->openDomain($domain);
+        $alias = $I->addAliasAsClient($domain);
+        $I->apiCheckDomainExists($alias);
+
+        $I->removeAliasAsClient($alias);
+        $I->apiCheckDomainNotExists($alias);
+    }
+    
     public function verifyNotAutomaticallyChangeMXRecords(ConfigurationSteps $I)
     {
         $I->setConfigurationOptions(
@@ -229,7 +257,7 @@ class C01ConfigurationCest
         $I->assertContains($ip.'::25', $routes);
     }
 
-    public function verifyAddonDomains(ConfigurationSteps $I)
+    public function verifyAddonDomainsAsNormalDomain(ConfigurationSteps $I)
     {
         $I->setConfigurationOptions(
             array(
@@ -238,44 +266,69 @@ class C01ConfigurationCest
         );
 
         list($customerUsername, $customerPassword, $domain) = $I->createCustomer();
+        $I->changeCustomerPlan($customerUsername);
+        $I->checkDomainIsPresentInFilter($domain);
+        $I->apiCheckDomainExists($domain);
+
+        $I->openDomain($domain);
+        $alias = $I->addAliasAsClient($domain);
+        $I->apiCheckDomainExists($alias);
+
+        $I->logout();
+        $I->loginAsRoot();
+        $I->removeSubscription($domain);
+        $I->apiCheckDomainNotExists($domain);
+        $I->apiCheckDomainNotExists($alias);
         $I->shareIp();
+        list($customerUsername, $customerPassword, $domain) = $I->createCustomer();
+        $I->changeCustomerPlan($customerUsername);
         $I->logout();
         $I->login($customerUsername, $customerPassword, true);
 
-        $I->click('Add New Domain');
-        $I->waitForText('Adding New Domain Name');
-        $addonDomainName = 'addon' . $domain;
-        $I->fillField("//input[@id='domainName-name']", $addonDomainName);
-        $I->click("//button[@name='send']");
-        $I->waitForText("The domain $addonDomainName was successfully created.", 1000);
+        $addonDomainName = $I->addAddonDomainAsClient($domain);
         $I->logout();
         $I->login();
         $I->goToPage(ProfessionalSpamFilterPage::DOMAIN_LIST_BTN, DomainListPage::TITLE);
         $I->searchDomainList($addonDomainName);
         $I->see($addonDomainName, DomainListPage::DOMAIN_TABLE);
+        $I->apiCheckDomainExists($addonDomainName);
     }
 
     public function verifyAddonDomainsAsAnAlias(ConfigurationSteps $I)
     {
-        $I->setProcessAddOnAndParkedDomainsOption();
-        $I->setAddOnAsAnAliasOption();
+        $I->setConfigurationOptions(array(
+            ConfigurationPage::PROCESS_ADDON_OPT => true,
+            ConfigurationPage::AUTOMATICALLY_ADD_DOMAINS_OPT => true,
+            ConfigurationPage::ADD_ADDON_OPT => true,
+            ConfigurationPage::DO_NOT_PROTECT_REMOTE_DOMAINS_OPT => false
+        ));
         $I->shareIp();
         list($customerUsername, $customerPassword, $domain) = $I->createCustomer();
-//        $I->logout();
-//        $I->login($customerUsername, $customerPassword, true);
         $I->openDomain($domain);
-        $I->click("//a[contains(@id,'buttonAddDomainAlias')]");
-        $I->waitForText('Add a Domain Alias');
-        $aliasDomain = 'alias' . $domain;
-        $I->fillField("//input[@id='name']", $aliasDomain);
-        $I->click("//button[@name='send']");
-        $I->waitForText("The domain alias $aliasDomain was created.", 30);
+        $aliasDomain = $I->addAliasAsClient($domain);
+        
         $I->logout();
         $I->login();
         $I->goToPage(ProfessionalSpamFilterPage::DOMAIN_LIST_BTN, DomainListPage::TITLE);
         $I->searchDomainList($aliasDomain);
         $I->see($aliasDomain, DomainListPage::DOMAIN_TABLE);
         $I->see("alias", DomainListPage::DOMAIN_TABLE);
+    }
+
+    public function verifyAddonDomainsAsAnAliasSubscription(ConfigurationSteps $I)
+    {
+        $I->setConfigurationOptions(array(
+            ConfigurationPage::PROCESS_ADDON_OPT => true,
+            ConfigurationPage::AUTOMATICALLY_ADD_DOMAINS_OPT => true,
+            ConfigurationPage::ADD_ADDON_OPT => true,
+        ));
+        list($customerUsername, $customerPassword, $domain) = $I->createCustomer();
+        $I->changeCustomerPlan($customerUsername);
+        $I->apiCheckDomainExists($domain);
+        $I->openDomain($domain);
+        $aliasDomain = $I->addAliasAsClient($domain);
+        $I->apiCheckDomainExists($aliasDomain);
+        $I->assertIsAliasInSpampanel($aliasDomain, $domain);
     }
 
     public function verifyRedirectBackToPleskUponLogout(ConfigurationSteps $I)

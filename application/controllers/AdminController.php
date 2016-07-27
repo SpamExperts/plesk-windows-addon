@@ -99,6 +99,10 @@ class AdminController extends Zend_Controller_Action
         // Get the translator
         $this->t = Zend_Registry::get('translator');
 
+        if (! empty($_POST['apipass'])) {
+            SpamFilter_ResellerAPI_Action::disableMessageRegistrationOnInvalidCredentials();
+        }
+
         /**
          * Get changed brandname (in case of it was set)
          * @see https://trac.spamexperts.com/ticket/16804
@@ -108,6 +112,8 @@ class AdminController extends Zend_Controller_Action
         if (!$brandname) {
             $brandname = 'Professional Spam Filter';
         }
+
+        SpamFilter_ResellerAPI_Action::enableMessageRegistrationOnInvalidCredentials();
 
         $this->view->headTitle()->set($brandname);
         $this->view->headTitle()->setSeparator(' | ');
@@ -176,9 +182,10 @@ class AdminController extends Zend_Controller_Action
                     if ( $config->add_extra_alias != $_POST['add_extra_alias'] ||
                          $config->handle_extra_domains != $_POST['handle_extra_domains']
                     ) {
+                        // refresh domains for other users as well
+                        SpamFilter_Core::invalidateDomainsCaches();
+
                         $cacheKey = SpamFilter_Core::getDomainsCacheId();
-                        SpamFilter_Panel_Cache::clear('user_domains_' . $cacheKey);
-                        SpamFilter_Panel_Cache::clear(strtolower('user_domains_' . md5(SpamFilter_Core::getUsername())));
                         $domains = $this->_panel->getDomains( array('username' => SpamFilter_Core::getUsername(), 'level' => 'owner' ) );
                         SpamFilter_Panel_Cache::set($cacheKey, $domains);
                     }

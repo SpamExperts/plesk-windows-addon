@@ -1,18 +1,14 @@
 <?php
 
-namespace Filesystem;
-
-class LinuxFilesystem extends AbstractFilesystem
+class Filesystem_LinuxFilesystem extends Filesystem_AbstractFilesystem
 {
     public function removeDirectory($directory)
     {
-        system("rm -rf $directory");
+        return shell_exec("rm -rf $directory");
     }
 
     public function symlinkDirectory($target, $link)
     {
-        system("ln -sf $target $link", $return);
-
-        return $return;
+        return shell_exec("ln -sf $target $link");
     }
 }

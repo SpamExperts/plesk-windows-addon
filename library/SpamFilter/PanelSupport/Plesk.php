@@ -85,7 +85,8 @@ class SpamFilter_PanelSupport_Plesk
     public function __construct($options = array(), Plesk_Driver_Ip $ipDriver = null)
     {
         $this->_logger = Zend_Registry::get('logger');
-        if (!file_exists("/usr/local/psa/") && !file_exists($_ENV['plesk_dir'])) {
+		$pleskDir = getenv('plesk_dir');
+        if (!file_exists("/usr/local/psa/") && (!($pleskDir) || !file_exists($pleskDir))) {
             $this->_logger->crit("Wrong Panelsupport library loaded. This is not Plesk.");
             throw new Exception("Wrong Panelsupport library loaded");
         }
@@ -365,10 +366,20 @@ class SpamFilter_PanelSupport_Plesk
                         ),
                     ), Plesk_Driver_Domain_Extractor_V10::PROTOCOL_VERSION);
 
-                    if (!empty($allAliasesData['site-alias']['get']['result'])
-                        && is_array($allAliasesData['site-alias']['get']['result'])
-                    ) {
-                        foreach ($allAliasesData['site-alias']['get']['result'] as $aliasInfo) {
+                    $aliasesResult = !empty($allAliasesData['site-alias']['get']['result']) ? $allAliasesData['site-alias']['get']['result'] : array();
+
+                    if (!empty($aliasesResult['info']['site-id'])) {
+                        $siteId = (!empty($aliasesResult['info']['site-id']) ? (int) $aliasesResult['info']['site-id'] : 0);
+
+                        if ($siteId && isset($domainsBySiteId[$siteId])) {
+                            if (!isset($allAliasesByDomain[$domainsBySiteId[$siteId]])) {
+                                $allAliasesByDomain[$domainsBySiteId[$siteId]] = array();
+                            }
+
+                            $allAliasesByDomain[$domainsBySiteId[$siteId]][] = $aliasesResult['info']['ascii-name'];
+                        }
+                    } elseif (!empty($aliasesResult) && is_array($aliasesResult)) {
+                        foreach ($aliasesResult as $aliasInfo) {
                             $siteId = (!empty($aliasInfo['info']['site-id']) ? (int) $aliasInfo['info']['site-id'] : 0);
                             if ($siteId && isset($domainsBySiteId[$siteId])) {
                                 if (!isset($allAliasesByDomain[$domainsBySiteId[$siteId]])) {
@@ -377,18 +388,6 @@ class SpamFilter_PanelSupport_Plesk
 
                                 $allAliasesByDomain[$domainsBySiteId[$siteId]][] = $aliasInfo['info']['ascii-name'];
                             }
-                        }
-                    } elseif (!empty($allAliasesData['site-alias']['get']['result']['info']['site-id'])) {
-                        $siteId = (!empty($allAliasesData['site-alias']['get']['result']['info']['site-id'])
-                            ? (int) $allAliasesData['site-alias']['get']['result']['info']['site-id']
-                            : 0);
-                        if ($siteId && isset($domainsBySiteId[$siteId])) {
-                            if (!isset($allAliasesByDomain[$domainsBySiteId[$siteId]])) {
-                                $allAliasesByDomain[$domainsBySiteId[$siteId]] = array();
-                            }
-
-                            $allAliasesByDomain[$domainsBySiteId[$siteId]][]
-                                = $allAliasesData['site-alias']['get']['result']['info']['ascii-name'];
                         }
                     }
                 }
@@ -525,11 +524,34 @@ class SpamFilter_PanelSupport_Plesk
 
             return true;
         }
-        
-        // validate reseller 
+
+        // validate reseller
         $reseller = pm_Session::getClient();
-        $clientName = mb_strtolower($this->getDomainUser($domain), 'UTF-8');
+
         if ($reseller->isReseller()) {
+            //check if this is a domain or an alias
+            //in case of alias, check ownership for main domain
+
+            $aapi = new Plesk_Driver_Aliases();
+            $alias = $aapi->getAliasbyName($domain);
+            if (!empty($alias)) {
+                $this->_logger->debug("Retrieveing main domain for alias '{$domain}'.");
+
+                $dapi = new Plesk_Driver_Domain();
+                $domainIds = array_keys($alias);
+                $domain = $dapi->getDomainbyId($domainIds[0]);
+
+                if (empty($domain)) {
+                    $this->_logger->debug("Couldn't retrieve main domain for alias '{$domain}'.");
+
+                    return false;
+                } else {
+                    $domain = $domain[0];
+                }
+            }
+
+            $clientName = mb_strtolower($this->getDomainUser($domain), 'UTF-8');
+
             if (class_exists('pm_Client')) {
                 $client = pm_Client::getByLogin($clientName);
                 $clientID = $client->getId();
@@ -543,7 +565,7 @@ class SpamFilter_PanelSupport_Plesk
                 return true;
             }
         }
-        
+
         // Check owner
         $isValidUser = mb_strtolower($this->getDomainUser($domain), 'UTF-8') == mb_strtolower($user, 'UTF-8');
 
@@ -636,6 +658,27 @@ class SpamFilter_PanelSupport_Plesk
         return false;
     }
 
+    public function createBulkProtectResponse($domain, $reason, $reasonStatus = "error", $rawResult)
+    {
+        return array(
+            "domain" => $domain,
+            "counts" => array(
+                "ok"      => 0,
+                "failed"  => 0,
+                "normal"  => 0,
+                "parked"  => 0,
+                "addon"   => 0,
+                "subdomain"   => 0,
+                "skipped" => 1,
+                "updated" => 0,
+            ),
+            "reason" => $reason,
+            "reason_status" => $reasonStatus,
+            'rawresult' => $rawResult,
+            "time_start" => $_SERVER['REQUEST_TIME'],
+            "time_execute" => time() - $_SERVER['REQUEST_TIME'],
+        );
+    }
 
     /**
      * Protect all domains on the server according to the configuration
@@ -1559,18 +1602,15 @@ class SpamFilter_PanelSupport_Plesk
      * @return string port
      */
     public function getMySQLPort(){
-        if(file_exists(PLESK_DIR . 'MySQL' . DS . 'Data' . DS . 'my.ini')){
-            $handle = fopen(PLESK_DIR . 'MySQL' . DS . 'Data' . DS . 'my.ini', "r");
-            while (!feof($handle)){
-                $line = fgets($handle);
-                if(strpos($line,'port=') !== false){
-                    $x = explode('=',$line);
-                    $port = trim($x[1]);
-                    return $port;
-                }
-                
-            }
+        $result = shell_exec('reg query "HKEY_LOCAL_MACHINE\SOFTWARE\Wow6432Node\PLESK\PSA Config\Config" | findstr MySQL_DB_PORT');
+        if ($result) {
+            $result = preg_replace('/\s+/', ' ', trim($result));
+            $port = explode(" ", $result);
+            $port = $port[2];
+
+            return $port;
         }
+
         // empty string if port is not found
         return '';       
     }    

@@ -25,20 +25,24 @@ exit /b
   <job id="VBS">
     <script language="VBScript">
 
+        Dim bRestrictedToFrozen
+        bRestrictedToFrozen = false
+
         Function checkPHPversion()
 
             sRequiredVersion = "5.2.4"
+            sRecommendedVersion = "5.4"
 
             Set FSO = CreateObject("Scripting.FileSystemObject")
-                If NOT FSO.FileExists(sPHPDir & "php.exe") Then
-                    Wscript.echo("PHP file not found")
-                    Wscript.quit
-                End If
+            If NOT FSO.FileExists(sPHPDir & "php.exe") Then
+                WScript.echo("PHP file not found")
+                WScript.quit
+            End If
 
             ' TO DO Specify PHP location
 
             sCommand = chr(34) & sPHPDir & "php.exe" & chr(34) & " -v " & chr(34)
-            Set WshShell = CreateObject("Wscript.shell")
+            Set WshShell = CreateObject("WScript.shell")
             Set WshShellExec = WshShell.Exec(sCommand)
 
             Select Case WshShellExec.Status
@@ -51,13 +55,26 @@ exit /b
             x = Split(strOutput)
             sInstalledVersion = x(1)
             Dim Inst
-            Dim Req
             Inst = Split(sInstalledVersion, ".")
+            Dim Rec
+            Rec = Split(sRecommendedVersion, ".")
+            Length = Ubound(Rec)
+            For i=0 To Length
+                If Rec(i) > Inst(i) Then
+                    WScript.echo("You are running an old PHP version no longer actively supported by this addon so only the 'frozen' update tier is available, for critical bugfixes. It is highly recommended to upgrade to a newer PHP version (>=" & sRecommendedVersion & ") to have access to all the latest features.")
+                    bRestrictedToFrozen = true
+                    Exit For
+                ElseIf Inst(i) > Rec(i) Then
+                    Exit Function
+                End If
+            Next
+
+            Dim Req
             Req = Split(sRequiredVersion, ".")
             Length = Ubound(Req)
             For i=0 To Length
                 If Req(i) > Inst(i) Then
-                    WScript.echo("PHP Version: " & sRequiredVersion & " is required!")
+                    WScript.echo("PHP Version: " & sRequiredVersion & " or newer is required!")
                     WScript.quit(1)
                 ElseIf Inst(i) > Req(i) Then
                     Exit Function
@@ -65,30 +82,38 @@ exit /b
             Next    
         End Function
 
-        With CreateObject("Wscript.Shell")
+        With CreateObject("WScript.Shell")
             sTempZipFile = .Environment("Process").Item("TMP") & "\spamexpertstemporary.zip"
             sTempDir = .Environment("Process").Item("TMP") & "\prospamfilter"
             sPHPDir = .Environment("Process").Item("plesk_dir") & "admin\bin\"
         End With
         
-        set oArgs = Wscript.Arguments
-        checkPHPVersion() 
-                
-        sRequiredVersion = "5.2.4"
-        sBaseUrl = "http://download.seinternal.com/integration/files/plesk"
+        set oArgs = WScript.Arguments
+        checkPHPVersion()
 
-        if NOT oArgs.count = 0 Then
-            if oArgs(0) = "trunk" Or oArgs(0) = "master" Then
-                sCHECKURL = "http://download.seinternal.com/integration/?act=getversion&panel=plesk&tier=testing&pkgtype=zip"
-                sfilepart = "_testing.zip"
+        sBaseUrl="http://download.seinternal.com/integration"
+        sDownloadBaseUrl = sBaseUrl & "/files/plesk"
+
+        if bRestrictedToFrozen Then
+            sCHECKURL = sBaseUrl & "/?act=getversion&panel=plesk&tier=frozen&pkgtype=zip"
+            sfilepart = "_frozen.zip"
+        else
+            if NOT oArgs.count = 0 Then
+                if oArgs(0) = "frozen" Then
+                    sCHECKURL = sBaseUrl & "/?act=getversion&panel=plesk&tier=frozen&pkgtype=zip"
+                    sfilepart = "_frozen.zip"
+                elseif oArgs(0) = "trunk" Or oArgs(0) = "master" Then
+                    sCHECKURL = sBaseUrl & "/?act=getversion&panel=plesk&tier=testing&pkgtype=zip"
+                    sfilepart = "_testing.zip"
+                else
+                    sCHECKURL = sBaseUrl & "/?act=getversion&panel=plesk&tier=testing&pkgtype=zip&branch=" & oArgs(0)
+                    sfilepart = "_testing_" & oArgs(0) & ".zip"
+                End If
             else
-                sCHECKURL = "http://download.seinternal.com/integration/?act=getversion&panel=plesk&tier=testing&pkgtype=zip&branch=" & oArgs(0)
-                sfilepart = "_testing_" & oArgs(0) & ".zip"
+                sCHECKURL= sBaseUrl & "/?act=getversion&panel=plesk&tier=stable&pkgtype=zip"
+                sfilepart = "_stable.zip"
             End If
-        else 
-                sCHECKURL="http://download.seinternal.com/integration/?act=getversion&panel=plesk&tier=stable&pkgtype=zip"
-                sfilepart="_stable.zip"
-        End If
+        End if
 
         Set check = CreateObject("MSXML2.XMLHTTP")
         check.Open "GET", sCHECKURL, false
@@ -97,12 +122,13 @@ exit /b
         reg.Pattern = "[0-9]*\.[0-9]*\.[0-9]*"
         Set matches = reg.Execute(check.responseText)
         If matches.count = 0 Then 
-            Wscript.echo "Cannot Check Current Version! ABORTED"
-            Wscript.quit(1)
+            WScript.echo "Cannot Check Current Version! ABORTED"
+            WScript.quit(1)
         End If
         sVersion = "v" & matches(0)
         sFullFile = sVersion & sfilepart
-        sDownloadUrl = sBaseUrl & "/" & sFullFile
+        sDownloadUrl = sDownloadBaseUrl & "/" & sFullFile
+
         With CreateObject("MSXML2.XMLHTTP")
             .Open "GET", sDownloadUrl, false
             .Send()

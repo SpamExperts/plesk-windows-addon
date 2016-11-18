@@ -398,7 +398,7 @@ class Installer
     {
         // Remove installer as we do not need it anymore.
         unlink($this->paths->destination . "/bin/install.php");
-        $this->output->ok("\n\n***** Congratulations, Professional Spam Filter for Plesk Linux has been installed on your system! *****");
+        $this->output->ok("\n\n***** Congratulations, Professional Spam Filter for Plesk Windows has been installed on your system! *****");
         $this->output->ok("If the addon is not configured yet, you should setup initial configuration in the admin part of the control panel before using its features.");
     }
 
